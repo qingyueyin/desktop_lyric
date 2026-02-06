@@ -155,6 +155,7 @@ void showUnlockOverlay(int parentHwnd) {
     ..ref.hInstance = hInstance
     ..ref.lpszClassName = className;
   win32.RegisterClass(wc);
+  ffi.calloc.free(wc);
 
   // Create the window.
   final windowCaption = win32.TEXT('desktop_lyric_unlock_overlay');
@@ -216,5 +217,5 @@ void showUnlockOverlay(int parentHwnd) {
   }
 
   lpfnWndProc.close();
-  win32.free(msg);
+  ffi.calloc.free(msg);
 }

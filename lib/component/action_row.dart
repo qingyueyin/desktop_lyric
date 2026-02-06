@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:desktop_lyric/component/desktop_lyric_body.dart';
 import 'package:desktop_lyric/component/foreground.dart';
+import 'package:desktop_lyric/component/unlock_overlay.dart';
 import 'package:desktop_lyric/message.dart';
 import 'package:desktop_lyric/desktop_lyric_controller.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +28,13 @@ class ActionRow extends StatelessWidget {
           padding: const EdgeInsets.only(right: 8),
           child: IconButton(
             onPressed: () async {
-              hWnd = win32.GetForegroundWindow();
+              final className = win32.TEXT("FLUTTER_RUNNER_WIN32_WINDOW");
+              final windowName = win32.TEXT("desktop_lyric");
+              final found = win32.FindWindow(className, windowName);
+              win32.free(className);
+              win32.free(windowName);
+
+              hWnd = found != 0 ? found : win32.GetForegroundWindow();
 
               if (hWnd != null) {
                 final exStyle = win32.GetWindowLongPtr(
@@ -46,6 +54,8 @@ class ActionRow extends StatelessWidget {
                   const ControlEventMessage(ControlEvent.lock)
                       .buildMessageJson(),
                 );
+
+                Isolate.run(() => showUnlockOverlay(hWnd!));
               }
             },
             color: Color(theme.onSurface),
@@ -131,6 +141,8 @@ class _ShowColorSelectorBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeChangedMessage>();
+    final textDisplayController = context.watch<TextDisplayController>();
+    final onSurface = Color(theme.onSurface);
     return MenuAnchor(
       controller: _COLOR_SELECTOR_CONTROLLER,
       consumeOutsideTap: true,
@@ -148,8 +160,72 @@ class _ShowColorSelectorBtn extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
+            "歌词设置",
+            style: TextStyle(color: onSurface),
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: textDisplayController.toggleLyricTranslation,
+              tooltip: textDisplayController.showLyricTranslation
+                  ? "歌词翻译：显示"
+                  : "歌词翻译：隐藏",
+              color: textDisplayController.showLyricTranslation
+                  ? onSurface
+                  : onSurface.withValues(alpha: 0.5),
+              icon: const Icon(Icons.translate),
+            ),
+            IconButton(
+              onPressed: textDisplayController.switchLyricTextAlign,
+              tooltip: "切换歌词对齐方向",
+              color: onSurface,
+              icon: Icon(
+                switch (textDisplayController.lyricTextAlign) {
+                  LyricTextAlign.left => Icons.format_align_left,
+                  LyricTextAlign.center => Icons.format_align_center,
+                  LyricTextAlign.right => Icons.format_align_right,
+                },
+              ),
+            ),
+            IconButton(
+              onPressed: () => textDisplayController.increaseFontWeight(),
+              onLongPress: () =>
+                  textDisplayController.increaseFontWeight(smallStep: true),
+              tooltip: "增加字体粗细 (${textDisplayController.lyricFontWeight})",
+              color: onSurface,
+              icon: Text(
+                "B+",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => textDisplayController.decreaseFontWeight(),
+              onLongPress: () =>
+                  textDisplayController.decreaseFontWeight(smallStep: true),
+              tooltip: "减小字体粗细 (${textDisplayController.lyricFontWeight})",
+              color: onSurface,
+              icon: Text(
+                "B-",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
             "背景不透明度",
-            style: TextStyle(color: Color(theme.onSurface)),
+            style: TextStyle(color: onSurface),
           ),
         ),
         SliderTheme(
@@ -174,7 +250,7 @@ class _ShowColorSelectorBtn extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             "文字颜色",
-            style: TextStyle(color: Color(theme.onSurface)),
+            style: TextStyle(color: onSurface),
           ),
         ),
         Wrap(

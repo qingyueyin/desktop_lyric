@@ -14,16 +14,77 @@ final TEXT_DISPLAY_CONTROLLER = TextDisplayController();
 bool ALWAYS_SHOW_ACTION_ROW = false;
 
 List<Shadow> lyricTextShadows(Color color) {
-  final shadowColor = color.computeLuminance() > 0.6
-      ? Colors.black.withOpacity(0.55)
-      : Colors.white.withOpacity(0.40);
-  return [
-    Shadow(
-      color: shadowColor,
-      blurRadius: 3.0,
-      offset: const Offset(0, 1),
-    ),
-  ];
+  return const [];
+}
+
+Color lyricOutlineColor(Color color) {
+  return Colors.black.withValues(alpha: 0.55);
+}
+
+double lyricOutlineWidth(double fontSize) {
+  return (fontSize * 0.07).clamp(1.0, 2.0).toDouble();
+}
+
+Widget outlinedText({
+  Key? key,
+  required String text,
+  required TextStyle style,
+  required Color outlineColor,
+  required double outlineWidth,
+  TextAlign? textAlign,
+  int? maxLines,
+  TextOverflow? overflow,
+  bool? softWrap,
+}) {
+  final strokePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = outlineWidth
+    ..color = outlineColor;
+
+  return Stack(
+    key: key,
+    alignment: Alignment.center,
+    children: [
+      Text(
+        text,
+        style: style.copyWith(foreground: strokePaint, shadows: const []),
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+        softWrap: softWrap,
+      ),
+      Text(
+        text,
+        style: style,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+        softWrap: softWrap,
+      ),
+    ],
+  );
+}
+
+FontWeight lyricFontWeightFromInt(int weight) {
+  final clamped = weight.clamp(100, 900);
+  return switch (clamped) {
+    100 => FontWeight.w100,
+    200 => FontWeight.w200,
+    300 => FontWeight.w300,
+    400 => FontWeight.w400,
+    500 => FontWeight.w500,
+    600 => FontWeight.w600,
+    700 => FontWeight.w700,
+    800 => FontWeight.w800,
+    900 => FontWeight.w900,
+    _ => FontWeight.values[((clamped / 100).round().clamp(1, 9)) - 1],
+  };
+}
+
+enum LyricTextAlign {
+  left,
+  center,
+  right,
 }
 
 /// 在保证正确布局的前提下缩小窗口大小
@@ -62,30 +123,62 @@ void resizeWithForegroundSize() {
 class TextDisplayController extends ChangeNotifier {
   double lyricFontSize = 22.0;
   double translationFontSize = 18.0;
+  int lyricFontWeight = 700;
+  bool showLyricTranslation = true;
+  LyricTextAlign lyricTextAlign = LyricTextAlign.center;
 
   /// true: 使用指定的颜色
   /// false: 跟随播放器主题（默认）
   bool hasSpecifiedColor = false;
   Color specifiedColor = Color(DesktopLyricController.instance.theme.value.primary);
 
-  /// 每次增加 1
   void increaseLyricFontSize() {
-    lyricFontSize += 1;
-    translationFontSize += 1;
+    if (lyricFontSize >= 48) return;
+    lyricFontSize += 2;
+    translationFontSize = (lyricFontSize - 4).clamp(12, 44).toDouble();
     notifyListeners();
 
     resizeWithForegroundSize();
   }
 
-  /// 每次减少 1，最小 18
   void decreaseLyricFontSize() {
-    if (translationFontSize <= 14) return;
-
-    lyricFontSize -= 1;
-    translationFontSize -= 1;
+    if (lyricFontSize <= 16) return;
+    lyricFontSize -= 2;
+    translationFontSize = (lyricFontSize - 4).clamp(12, 44).toDouble();
     notifyListeners();
 
     resizeWithForegroundSize();
+  }
+
+  void switchLyricTextAlign() {
+    lyricTextAlign = switch (lyricTextAlign) {
+      LyricTextAlign.left => LyricTextAlign.center,
+      LyricTextAlign.center => LyricTextAlign.right,
+      LyricTextAlign.right => LyricTextAlign.left,
+    };
+    notifyListeners();
+  }
+
+  void toggleLyricTranslation() {
+    showLyricTranslation = !showLyricTranslation;
+    notifyListeners();
+    resizeWithForegroundSize();
+  }
+
+  void setFontWeight(int weight) {
+    lyricFontWeight = weight.clamp(100, 900);
+    notifyListeners();
+    resizeWithForegroundSize();
+  }
+
+  void increaseFontWeight({bool smallStep = false}) {
+    final step = smallStep ? 10 : 100;
+    setFontWeight(lyricFontWeight + step);
+  }
+
+  void decreaseFontWeight({bool smallStep = false}) {
+    final step = smallStep ? 10 : 100;
+    setFontWeight(lyricFontWeight - step);
   }
 
   /// 指定字体颜色

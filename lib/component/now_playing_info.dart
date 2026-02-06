@@ -15,7 +15,13 @@ class NowPlayingInfo extends StatelessWidget {
     final textColor = textDisplayController.hasSpecifiedColor
         ? textDisplayController.specifiedColor
         : Color(theme.primary);
-    final textStyle = TextStyle(color: textColor, shadows: lyricTextShadows(textColor));
+    final textStyle = DefaultTextStyle.of(context).style.merge(
+          TextStyle(
+            color: textColor,
+            fontWeight: lyricFontWeightFromInt(textDisplayController.lyricFontWeight),
+          ),
+        );
+    final outlineColor = lyricOutlineColor(textColor);
 
     return ValueListenableBuilder(
       valueListenable: DesktopLyricController.instance.nowPlaying,
@@ -24,10 +30,25 @@ class NowPlayingInfo extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(nowPlaying.title, style: textStyle),
-            Text(
-              "${nowPlaying.artist} - ${nowPlaying.album}",
+            outlinedText(
+              text: nowPlaying.title,
               style: textStyle,
+              outlineColor: outlineColor,
+              outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              softWrap: false,
+            ),
+            outlinedText(
+              text: "${nowPlaying.artist} - ${nowPlaying.album}",
+              style: textStyle,
+              outlineColor: outlineColor,
+              outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              softWrap: false,
             ),
           ],
         );

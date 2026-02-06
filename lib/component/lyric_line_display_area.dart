@@ -15,37 +15,65 @@ class LyricLineDisplayArea extends StatelessWidget {
     final textColor = textDisplayController.hasSpecifiedColor
         ? textDisplayController.specifiedColor
         : Color(theme.primary);
+    final textAlign = switch (textDisplayController.lyricTextAlign) {
+      LyricTextAlign.left => TextAlign.left,
+      LyricTextAlign.center => TextAlign.center,
+      LyricTextAlign.right => TextAlign.right,
+    };
+    final crossAxisAlignment = switch (textDisplayController.lyricTextAlign) {
+      LyricTextAlign.left => CrossAxisAlignment.start,
+      LyricTextAlign.center => CrossAxisAlignment.center,
+      LyricTextAlign.right => CrossAxisAlignment.end,
+    };
 
     return ValueListenableBuilder(
       valueListenable: DesktopLyricController.instance.lyricLine,
       builder: (context, lyricLine, _) {
         final contentText = Text(
-          key: LYRIC_TEXT_KEY,
           lyricLine.content,
           style: TextStyle(
             color: textColor,
             fontSize: textDisplayController.lyricFontSize,
-            fontWeight: FontWeight.bold,
-            shadows: lyricTextShadows(textColor),
+            fontWeight:
+                lyricFontWeightFromInt(textDisplayController.lyricFontWeight),
           ),
           maxLines: 1,
+          overflow: TextOverflow.clip,
         );
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: crossAxisAlignment,
           children: [
-            contentText,
-            if (lyricLine.translation != null)
-              Text(
+            outlinedText(
+              key: LYRIC_TEXT_KEY,
+              text: lyricLine.content,
+              style: contentText.style!,
+              outlineColor: lyricOutlineColor(textColor),
+              outlineWidth: lyricOutlineWidth(textDisplayController.lyricFontSize),
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              textAlign: textAlign,
+              softWrap: false,
+            ),
+            if (textDisplayController.showLyricTranslation &&
+                lyricLine.translation != null)
+              outlinedText(
                 key: TRANSLATION_TEXT_KEY,
-                lyricLine.translation!,
+                text: lyricLine.translation!,
                 style: TextStyle(
                   color: textColor,
                   fontSize: textDisplayController.translationFontSize,
-                  fontWeight: FontWeight.bold,
-                  shadows: lyricTextShadows(textColor),
+                  fontWeight: lyricFontWeightFromInt(
+                    textDisplayController.lyricFontWeight,
+                  ),
                 ),
+                outlineColor: lyricOutlineColor(textColor),
+                outlineWidth:
+                    lyricOutlineWidth(textDisplayController.translationFontSize),
                 maxLines: 1,
+                overflow: TextOverflow.clip,
+                textAlign: textAlign,
+                softWrap: false,
               ),
           ],
         );
