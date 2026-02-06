@@ -26,7 +26,7 @@ class LyricLineDisplayArea extends StatelessWidget {
             color: textColor,
             fontSize: textDisplayController.lyricFontSize,
             fontWeight: FontWeight.bold,
-            shadows: kElevationToShadow[4],
+            shadows: lyricTextShadows(textColor),
           ),
           maxLines: 1,
         );
@@ -43,7 +43,7 @@ class LyricLineDisplayArea extends StatelessWidget {
                   color: textColor,
                   fontSize: textDisplayController.translationFontSize,
                   fontWeight: FontWeight.bold,
-                  shadows: kElevationToShadow[4],
+                  shadows: lyricTextShadows(textColor),
                 ),
                 maxLines: 1,
               ),

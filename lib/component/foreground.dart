@@ -13,6 +13,19 @@ final TEXT_DISPLAY_CONTROLLER = TextDisplayController();
 
 bool ALWAYS_SHOW_ACTION_ROW = false;
 
+List<Shadow> lyricTextShadows(Color color) {
+  final shadowColor = color.computeLuminance() > 0.6
+      ? Colors.black.withOpacity(0.55)
+      : Colors.white.withOpacity(0.40);
+  return [
+    Shadow(
+      color: shadowColor,
+      blurRadius: 3.0,
+      offset: const Offset(0, 1),
+    ),
+  ];
+}
+
 /// 在保证正确布局的前提下缩小窗口大小
 void resizeWithForegroundSize() {
   WidgetsBinding.instance.addPostFrameCallback((_) {

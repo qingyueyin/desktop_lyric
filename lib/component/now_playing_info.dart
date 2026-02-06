@@ -15,7 +15,7 @@ class NowPlayingInfo extends StatelessWidget {
     final textColor = textDisplayController.hasSpecifiedColor
         ? textDisplayController.specifiedColor
         : Color(theme.primary);
-    final textStyle = TextStyle(color: textColor);
+    final textStyle = TextStyle(color: textColor, shadows: lyricTextShadows(textColor));
 
     return ValueListenableBuilder(
       valueListenable: DesktopLyricController.instance.nowPlaying,
