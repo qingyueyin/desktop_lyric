@@ -56,49 +56,73 @@ class DesktopLyricController {
     return _instance!;
   }
 
+  String _stdinBuffer = '';
+
   DesktopLyricController._() {
     stdin.transform(utf8.decoder).listen((event) {
-      try {
-        final Map messageMap = json.decode(event);
-        final String type = messageMap["type"];
-        final content = messageMap["message"] as Map<String, dynamic>;
+      _stdinBuffer += event;
+      while (true) {
+        final idx = _stdinBuffer.indexOf('\n');
+        if (idx < 0) break;
+        final line = _stdinBuffer.substring(0, idx).trimRight();
+        _stdinBuffer = _stdinBuffer.substring(idx + 1);
+        if (line.isEmpty) continue;
+        _handleMessageLine(line);
+      }
 
-        if (type == getMessageTypeName<PlayerStateChangedMessage>()) {
-          final playerState = PlayerStateChangedMessage.fromJson(content);
-          isPlaying.value = playerState.playing;
-        } else if (type == getMessageTypeName<NowPlayingChangedMessage>()) {
-          final nowPlayingMessage = NowPlayingChangedMessage.fromJson(content);
-          nowPlaying.value = nowPlayingMessage;
-          lyricLine.value = const LyricLineChangedMessage("", Duration.zero);
-        } else if (type == getMessageTypeName<LyricLineChangedMessage>()) {
-          final lyricLineMessage = LyricLineChangedMessage.fromJson(content);
-          lyricLine.value = lyricLineMessage;
-        } else if (type == getMessageTypeName<ThemeModeChangedMessage>()) {
-          final themeMode = ThemeModeChangedMessage.fromJson(content);
-          isDarkMode.value = themeMode.darkMode;
-        } else if (type == getMessageTypeName<ThemeChangedMessage>()) {
-          final themeMessage = ThemeChangedMessage.fromJson(content);
-          theme.value = themeMessage;
-        } else if (type == getMessageTypeName<UnlockMessage>()) {
-          if (hWnd != null) {
-            final exStyle = win32.GetWindowLongPtr(
-              hWnd!,
-              win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
-            );
-
-            win32.SetWindowLongPtr(
-              hWnd!,
-              win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
-              exStyle &
-                  ~win32.WINDOW_EX_STYLE.WS_EX_LAYERED &
-                  ~win32.WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
-            );
-          }
+      if (!_stdinBuffer.contains('\n')) {
+        final candidate = _stdinBuffer.trim();
+        if (candidate.startsWith('{') && candidate.endsWith('}')) {
+          try {
+            _handleMessageLine(candidate);
+            _stdinBuffer = '';
+          } catch (_) {}
         }
-      } catch (err, stack) {
-        stderr.write(err);
-        stderr.write(stack);
       }
     });
+  }
+
+  void _handleMessageLine(String raw) {
+    try {
+      final Map messageMap = json.decode(raw);
+      final String type = messageMap["type"];
+      final content = messageMap["message"] as Map<String, dynamic>;
+
+      if (type == getMessageTypeName<PlayerStateChangedMessage>()) {
+        final playerState = PlayerStateChangedMessage.fromJson(content);
+        isPlaying.value = playerState.playing;
+      } else if (type == getMessageTypeName<NowPlayingChangedMessage>()) {
+        final nowPlayingMessage = NowPlayingChangedMessage.fromJson(content);
+        nowPlaying.value = nowPlayingMessage;
+        lyricLine.value = const LyricLineChangedMessage("", Duration.zero);
+      } else if (type == getMessageTypeName<LyricLineChangedMessage>()) {
+        final lyricLineMessage = LyricLineChangedMessage.fromJson(content);
+        lyricLine.value = lyricLineMessage;
+      } else if (type == getMessageTypeName<ThemeModeChangedMessage>()) {
+        final themeMode = ThemeModeChangedMessage.fromJson(content);
+        isDarkMode.value = themeMode.darkMode;
+      } else if (type == getMessageTypeName<ThemeChangedMessage>()) {
+        final themeMessage = ThemeChangedMessage.fromJson(content);
+        theme.value = themeMessage;
+      } else if (type == getMessageTypeName<UnlockMessage>()) {
+        if (hWnd != null) {
+          final exStyle = win32.GetWindowLongPtr(
+            hWnd!,
+            win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+          );
+
+          win32.SetWindowLongPtr(
+            hWnd!,
+            win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+            exStyle &
+                ~win32.WINDOW_EX_STYLE.WS_EX_LAYERED &
+                ~win32.WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
+          );
+        }
+      }
+    } catch (err, stack) {
+      stderr.write(err);
+      stderr.write(stack);
+    }
   }
 }
