@@ -17,7 +17,7 @@ List<Shadow> lyricTextShadows(Color color) {
 }
 
 Color lyricOutlineColor(Color color) {
-  return Colors.black.withValues(alpha: 0.72);
+  return Colors.black.withValues(alpha: 0.85);
 }
 
 double lyricOutlineWidth(double fontSize) {

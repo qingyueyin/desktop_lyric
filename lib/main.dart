@@ -18,8 +18,11 @@ void main(List<String> args) async {
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     alwaysOnTop: true,
+    minimumSize: Size(400, 122),
+    maximumSize: Size(2400, 122),
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.setAsFrameless();
     await windowManager.show();
     final className = win32.TEXT("FLUTTER_RUNNER_WIN32_WINDOW");
     final windowName = win32.TEXT("desktop_lyric");

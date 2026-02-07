@@ -147,14 +147,36 @@ class LyricLineChangedMessage extends Message {
   final String content;
   final String? translation;
   final Duration length;
+  final List<LyricWord>? words;
+  final int? progressMs;
 
-  const LyricLineChangedMessage(this.content, this.length, [this.translation]);
+  const LyricLineChangedMessage(
+    this.content,
+    this.length, [
+    this.translation,
+    this.words,
+    this.progressMs,
+  ]);
 
   factory LyricLineChangedMessage.fromJson(Map<String, dynamic> json) =>
       _$LyricLineChangedMessageFromJson(json);
 
   @override
   Map<String, dynamic> _toJson() => _$LyricLineChangedMessageToJson(this);
+}
+
+@JsonSerializable()
+class LyricWord {
+  final int startMs;
+  final int lengthMs;
+  final String content;
+
+  const LyricWord(this.startMs, this.lengthMs, this.content);
+
+  factory LyricWord.fromJson(Map<String, dynamic> json) =>
+      _$LyricWordFromJson(json);
+
+  Map<String, dynamic> toJson() => _$LyricWordToJson(this);
 }
 
 /// player -> desktop lyric

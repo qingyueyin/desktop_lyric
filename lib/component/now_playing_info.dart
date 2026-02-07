@@ -16,11 +16,13 @@ class NowPlayingInfo extends StatelessWidget {
         ? textDisplayController.specifiedColor
         : Color(theme.primary);
     final textStyle = DefaultTextStyle.of(context).style.merge(
-          TextStyle(
-            color: textColor,
-            fontWeight: lyricFontWeightFromInt(textDisplayController.lyricFontWeight),
-          ),
-        );
+      TextStyle(
+        color: textColor,
+        fontWeight: lyricFontWeightFromInt(
+          textDisplayController.lyricFontWeight,
+        ),
+      ),
+    );
     final outlineColor = lyricOutlineColor(textColor);
     final textAlign = switch (textDisplayController.lyricTextAlign) {
       LyricTextAlign.left => TextAlign.left,
@@ -36,31 +38,37 @@ class NowPlayingInfo extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: DesktopLyricController.instance.nowPlaying,
       builder: (context, nowPlaying, _) {
-        return Column(
-          crossAxisAlignment: crossAxisAlignment,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            outlinedText(
-              text: nowPlaying.title,
-              style: textStyle,
-              outlineColor: outlineColor,
-              outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: textAlign,
-              softWrap: false,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: crossAxisAlignment,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                outlinedText(
+                  text: nowPlaying.title,
+                  style: textStyle,
+                  outlineColor: outlineColor,
+                  outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: textAlign,
+                  softWrap: false,
+                ),
+                outlinedText(
+                  text: "${nowPlaying.artist} - ${nowPlaying.album}",
+                  style: textStyle,
+                  outlineColor: outlineColor,
+                  outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: textAlign,
+                  softWrap: false,
+                ),
+              ],
             ),
-            outlinedText(
-              text: "${nowPlaying.artist} - ${nowPlaying.album}",
-              style: textStyle,
-              outlineColor: outlineColor,
-              outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: textAlign,
-              softWrap: false,
-            ),
-          ],
+          ),
         );
       },
     );

@@ -65,17 +65,6 @@ class ActionRow extends StatelessWidget {
         ),
         spacer,
         IconButton(
-          onPressed: textDisplayController.toggleLyricTranslation,
-          tooltip: textDisplayController.showLyricTranslation
-              ? "歌词翻译：显示"
-              : "歌词翻译：隐藏",
-          color: textDisplayController.showLyricTranslation
-              ? onSurface
-              : onSurface.withValues(alpha: 0.5),
-          icon: const Icon(Icons.translate),
-        ),
-        spacer,
-        IconButton(
           onPressed: textDisplayController.switchLyricTextAlign,
           tooltip: "切换歌词对齐方向",
           color: onSurface,
@@ -167,6 +156,17 @@ class ActionRow extends StatelessWidget {
     final right = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        IconButton(
+          onPressed: textDisplayController.toggleLyricTranslation,
+          tooltip: textDisplayController.showLyricTranslation
+              ? "歌词翻译：显示"
+              : "歌词翻译：隐藏",
+          color: textDisplayController.showLyricTranslation
+              ? onSurface
+              : onSurface.withValues(alpha: 0.5),
+          icon: const Icon(Icons.translate),
+        ),
+        spacer,
         IconButton(
           onPressed: textDisplayController.toggleNowPlayingInfo,
           tooltip: textDisplayController.showNowPlayingInfo
