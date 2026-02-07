@@ -18,7 +18,7 @@ List<Shadow> lyricTextShadows(Color color) {
 }
 
 Color lyricOutlineColor(Color color) {
-  return Colors.black.withValues(alpha: 0.55);
+  return Colors.black.withValues(alpha: 0.72);
 }
 
 double lyricOutlineWidth(double fontSize) {
@@ -87,44 +87,12 @@ enum LyricTextAlign {
   right,
 }
 
-/// 在保证正确布局的前提下缩小窗口大小
-void resizeWithForegroundSize() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    double? lyricTextHeight;
-    double? translationTextHeight;
-
-    final lyricTextRenderObject =
-        LYRIC_TEXT_KEY.currentContext?.findRenderObject();
-    if (lyricTextRenderObject != null) {
-      final renderBox = lyricTextRenderObject as RenderBox;
-      lyricTextHeight = renderBox.size.height;
-    }
-
-    final translationTextRenderObject =
-        TRANSLATION_TEXT_KEY.currentContext?.findRenderObject();
-    if (translationTextRenderObject != null) {
-      final renderBox = translationTextRenderObject as RenderBox;
-      translationTextHeight = renderBox.size.height;
-    }
-
-    if (lyricTextHeight != null) {
-      final windowHeight = 8 // vertical padding
-          + 40 // ActionRow/NowPlayinginfo
-          + 8 // spacer between (ActionRow/NowPlayingInfo) and LyricLineView
-          + lyricTextHeight
-          + (translationTextHeight ?? 0)
-          + 8; // vertical padding
-      // 保证不会溢出
-      windowManager.setSize(Size(800, windowHeight + 1));
-    }
-  });
-}
-
 class TextDisplayController extends ChangeNotifier {
   double lyricFontSize = 22.0;
   double translationFontSize = 18.0;
   int lyricFontWeight = 700;
   bool showLyricTranslation = true;
+  bool showNowPlayingInfo = true;
   LyricTextAlign lyricTextAlign = LyricTextAlign.center;
 
   /// true: 使用指定的颜色
@@ -137,8 +105,6 @@ class TextDisplayController extends ChangeNotifier {
     lyricFontSize += 2;
     translationFontSize = (lyricFontSize - 4).clamp(12, 44).toDouble();
     notifyListeners();
-
-    resizeWithForegroundSize();
   }
 
   void decreaseLyricFontSize() {
@@ -146,8 +112,6 @@ class TextDisplayController extends ChangeNotifier {
     lyricFontSize -= 2;
     translationFontSize = (lyricFontSize - 4).clamp(12, 44).toDouble();
     notifyListeners();
-
-    resizeWithForegroundSize();
   }
 
   void switchLyricTextAlign() {
@@ -162,7 +126,11 @@ class TextDisplayController extends ChangeNotifier {
   void toggleLyricTranslation() {
     showLyricTranslation = !showLyricTranslation;
     notifyListeners();
-    resizeWithForegroundSize();
+  }
+
+  void toggleNowPlayingInfo() {
+    showNowPlayingInfo = !showNowPlayingInfo;
+    notifyListeners();
   }
 
   void setFontWeight(int weight) {
@@ -205,18 +173,25 @@ class DesktopLyricForeground extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ChangeNotifierProvider.value(
         value: TEXT_DISPLAY_CONTROLLER,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              child: isHovering || ALWAYS_SHOW_ACTION_ROW
-                  ? const RepaintBoundary(child: ActionRow())
-                  : const RepaintBoundary(child: NowPlayingInfo()),
-            ),
-            const SizedBox(height: 8),
-            const Expanded(child: LyricLineView()),
-          ],
+        child: Consumer<TextDisplayController>(
+          builder: (context, textDisplayController, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: isHovering || ALWAYS_SHOW_ACTION_ROW
+                    ? const RepaintBoundary(child: ActionRow())
+                    : SizedBox(
+                        height: 40,
+                        child: textDisplayController.showNowPlayingInfo
+                            ? const RepaintBoundary(child: NowPlayingInfo())
+                            : const SizedBox.shrink(),
+                      ),
+              ),
+              const SizedBox(height: 8),
+              const Expanded(child: LyricLineView()),
+            ],
+          ),
         ),
       ),
     );

@@ -19,7 +19,8 @@ class ActionRow extends StatelessWidget {
     final theme = context.watch<ThemeChangedMessage>();
     const spacer = SizedBox(width: 8);
 
-    final textDisplayController = context.read<TextDisplayController>();
+    final textDisplayController = context.watch<TextDisplayController>();
+    final onSurface = Color(theme.onSurface);
 
     return Stack(
       alignment: Alignment.centerRight,
@@ -58,7 +59,7 @@ class ActionRow extends StatelessWidget {
                 Isolate.run(() => showUnlockOverlay(hWnd!));
               }
             },
-            color: Color(theme.onSurface),
+            color: onSurface,
             icon: const Icon(Icons.lock),
           ),
         ),
@@ -67,14 +68,94 @@ class ActionRow extends StatelessWidget {
           children: [
             IconButton(
               onPressed: textDisplayController.increaseLyricFontSize,
-              color: Color(theme.onSurface),
+              color: onSurface,
               icon: const Icon(Icons.text_increase),
             ),
             spacer,
             IconButton(
               onPressed: textDisplayController.decreaseLyricFontSize,
-              color: Color(theme.onSurface),
+              color: onSurface,
               icon: const Icon(Icons.text_decrease),
+            ),
+            spacer,
+            IconButton(
+              onPressed: textDisplayController.toggleLyricTranslation,
+              tooltip: textDisplayController.showLyricTranslation
+                  ? "歌词翻译：显示"
+                  : "歌词翻译：隐藏",
+              color: textDisplayController.showLyricTranslation
+                  ? onSurface
+                  : onSurface.withValues(alpha: 0.5),
+              icon: const Icon(Icons.translate),
+            ),
+            spacer,
+            IconButton(
+              onPressed: textDisplayController.switchLyricTextAlign,
+              tooltip: "切换歌词对齐方向",
+              color: onSurface,
+              icon: Icon(
+                switch (textDisplayController.lyricTextAlign) {
+                  LyricTextAlign.left => Icons.format_align_left,
+                  LyricTextAlign.center => Icons.format_align_center,
+                  LyricTextAlign.right => Icons.format_align_right,
+                },
+              ),
+            ),
+            spacer,
+            IconButton(
+              onPressed: () => textDisplayController.increaseFontWeight(),
+              onLongPress: () =>
+                  textDisplayController.increaseFontWeight(smallStep: true),
+              tooltip: "增加字体粗细 (${textDisplayController.lyricFontWeight})",
+              color: onSurface,
+              icon: Text(
+                "B+",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            spacer,
+            IconButton(
+              onPressed: () => textDisplayController.decreaseFontWeight(),
+              onLongPress: () =>
+                  textDisplayController.decreaseFontWeight(smallStep: true),
+              tooltip: "减小字体粗细 (${textDisplayController.lyricFontWeight})",
+              color: onSurface,
+              icon: Text(
+                "B-",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            spacer,
+            IconButton(
+              onPressed: textDisplayController.toggleNowPlayingInfo,
+              tooltip: textDisplayController.showNowPlayingInfo
+                  ? "关闭曲目信息"
+                  : "显示曲目信息",
+              color: onSurface,
+              icon: Icon(
+                textDisplayController.showNowPlayingInfo
+                    ? Icons.info_outline
+                    : Icons.info,
+              ),
+            ),
+            spacer,
+            IconButton(
+              onPressed: textDisplayController.toggleDoubleLineMode,
+              tooltip: textDisplayController.doubleLineMode ? "双行模式" : "单行模式",
+              color: onSurface,
+              icon: Icon(
+                textDisplayController.doubleLineMode
+                    ? Icons.view_agenda
+                    : Icons.view_headline,
+              ),
             ),
             spacer,
             IconButton(
@@ -84,7 +165,7 @@ class ActionRow extends StatelessWidget {
                       .buildMessageJson(),
                 );
               },
-              color: Color(theme.onSurface),
+              color: onSurface,
               icon: const Icon(Icons.skip_previous),
             ),
             spacer,
@@ -98,7 +179,7 @@ class ActionRow extends StatelessWidget {
                     ).buildMessageJson(),
                   );
                 },
-                color: Color(theme.onSurface),
+                color: onSurface,
                 icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
               ),
             ),
@@ -110,7 +191,7 @@ class ActionRow extends StatelessWidget {
                       .buildMessageJson(),
                 );
               },
-              color: Color(theme.onSurface),
+              color: onSurface,
               icon: const Icon(Icons.skip_next),
             ),
             spacer,
@@ -123,7 +204,7 @@ class ActionRow extends StatelessWidget {
                       .buildMessageJson(),
                 );
               },
-              color: Color(theme.onSurface),
+              color: onSurface,
               icon: const Icon(Icons.close),
             ),
           ],
@@ -141,7 +222,6 @@ class _ShowColorSelectorBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeChangedMessage>();
-    final textDisplayController = context.watch<TextDisplayController>();
     final onSurface = Color(theme.onSurface);
     return MenuAnchor(
       controller: _COLOR_SELECTOR_CONTROLLER,
@@ -157,70 +237,6 @@ class _ShowColorSelectorBtn extends StatelessWidget {
         elevation: const WidgetStatePropertyAll(8),
       ),
       menuChildren: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            "歌词设置",
-            style: TextStyle(color: onSurface),
-          ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: textDisplayController.toggleLyricTranslation,
-              tooltip: textDisplayController.showLyricTranslation
-                  ? "歌词翻译：显示"
-                  : "歌词翻译：隐藏",
-              color: textDisplayController.showLyricTranslation
-                  ? onSurface
-                  : onSurface.withValues(alpha: 0.5),
-              icon: const Icon(Icons.translate),
-            ),
-            IconButton(
-              onPressed: textDisplayController.switchLyricTextAlign,
-              tooltip: "切换歌词对齐方向",
-              color: onSurface,
-              icon: Icon(
-                switch (textDisplayController.lyricTextAlign) {
-                  LyricTextAlign.left => Icons.format_align_left,
-                  LyricTextAlign.center => Icons.format_align_center,
-                  LyricTextAlign.right => Icons.format_align_right,
-                },
-              ),
-            ),
-            IconButton(
-              onPressed: () => textDisplayController.increaseFontWeight(),
-              onLongPress: () =>
-                  textDisplayController.increaseFontWeight(smallStep: true),
-              tooltip: "增加字体粗细 (${textDisplayController.lyricFontWeight})",
-              color: onSurface,
-              icon: Text(
-                "B+",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: onSurface,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: () => textDisplayController.decreaseFontWeight(),
-              onLongPress: () =>
-                  textDisplayController.decreaseFontWeight(smallStep: true),
-              tooltip: "减小字体粗细 (${textDisplayController.lyricFontWeight})",
-              color: onSurface,
-              icon: Text(
-                "B-",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: onSurface,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
