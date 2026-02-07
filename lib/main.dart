@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:win32/win32.dart' as win32;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +20,24 @@ void main(List<String> args) async {
     alwaysOnTop: true,
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.setAsFrameless();
     await windowManager.show();
+    final className = win32.TEXT("FLUTTER_RUNNER_WIN32_WINDOW");
+    final windowName = win32.TEXT("desktop_lyric");
+    final hWnd = win32.FindWindow(className, windowName);
+    win32.free(className);
+    win32.free(windowName);
+    if (hWnd != 0) {
+      final exStyle = win32.GetWindowLongPtr(
+        hWnd,
+        win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+      );
+      win32.SetWindowLongPtr(
+        hWnd,
+        win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+        (exStyle | win32.WINDOW_EX_STYLE.WS_EX_TOOLWINDOW) &
+            ~win32.WINDOW_EX_STYLE.WS_EX_APPWINDOW,
+      );
+    }
   });
 
   runApp(const DesktopLyricApp());

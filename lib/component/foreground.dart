@@ -4,7 +4,6 @@ import 'package:desktop_lyric/component/now_playing_info.dart';
 import 'package:desktop_lyric/desktop_lyric_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:window_manager/window_manager.dart';
 
 final LYRIC_TEXT_KEY = GlobalKey();
 final TRANSLATION_TEXT_KEY = GlobalKey();
@@ -136,7 +135,6 @@ class TextDisplayController extends ChangeNotifier {
   void setFontWeight(int weight) {
     lyricFontWeight = weight.clamp(100, 900);
     notifyListeners();
-    resizeWithForegroundSize();
   }
 
   void increaseFontWeight({bool smallStep = false}) {
@@ -183,6 +181,7 @@ class DesktopLyricForeground extends StatelessWidget {
                     ? const RepaintBoundary(child: ActionRow())
                     : SizedBox(
                         height: 40,
+                        width: double.infinity,
                         child: textDisplayController.showNowPlayingInfo
                             ? const RepaintBoundary(child: NowPlayingInfo())
                             : const SizedBox.shrink(),

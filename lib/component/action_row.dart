@@ -22,193 +22,189 @@ class ActionRow extends StatelessWidget {
     final textDisplayController = context.watch<TextDisplayController>();
     final onSurface = Color(theme.onSurface);
 
-    return Stack(
-      alignment: Alignment.centerRight,
+    void lockWindow() {
+      final className = win32.TEXT("FLUTTER_RUNNER_WIN32_WINDOW");
+      final windowName = win32.TEXT("desktop_lyric");
+      final found = win32.FindWindow(className, windowName);
+      win32.free(className);
+      win32.free(windowName);
+
+      hWnd = found != 0 ? found : win32.GetForegroundWindow();
+      if (hWnd == null) return;
+
+      final exStyle = win32.GetWindowLongPtr(
+        hWnd!,
+        win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+      );
+
+      win32.SetWindowLongPtr(
+        hWnd!,
+        win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
+        exStyle |
+            win32.WINDOW_EX_STYLE.WS_EX_LAYERED |
+            win32.WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
+      );
+
+      stdout.write(const ControlEventMessage(ControlEvent.lock).buildMessageJson());
+      Isolate.run(() => showUnlockOverlay(hWnd!));
+    }
+
+    final left = Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: IconButton(
-            onPressed: () async {
-              final className = win32.TEXT("FLUTTER_RUNNER_WIN32_WINDOW");
-              final windowName = win32.TEXT("desktop_lyric");
-              final found = win32.FindWindow(className, windowName);
-              win32.free(className);
-              win32.free(windowName);
-
-              hWnd = found != 0 ? found : win32.GetForegroundWindow();
-
-              if (hWnd != null) {
-                final exStyle = win32.GetWindowLongPtr(
-                  hWnd!,
-                  win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
-                );
-
-                win32.SetWindowLongPtr(
-                  hWnd!,
-                  win32.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE,
-                  exStyle |
-                      win32.WINDOW_EX_STYLE.WS_EX_LAYERED |
-                      win32.WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
-                );
-
-                stdout.write(
-                  const ControlEventMessage(ControlEvent.lock)
-                      .buildMessageJson(),
-                );
-
-                Isolate.run(() => showUnlockOverlay(hWnd!));
-              }
+        IconButton(
+          onPressed: textDisplayController.increaseLyricFontSize,
+          color: onSurface,
+          icon: const Icon(Icons.text_increase),
+        ),
+        spacer,
+        IconButton(
+          onPressed: textDisplayController.decreaseLyricFontSize,
+          color: onSurface,
+          icon: const Icon(Icons.text_decrease),
+        ),
+        spacer,
+        IconButton(
+          onPressed: textDisplayController.toggleLyricTranslation,
+          tooltip: textDisplayController.showLyricTranslation
+              ? "歌词翻译：显示"
+              : "歌词翻译：隐藏",
+          color: textDisplayController.showLyricTranslation
+              ? onSurface
+              : onSurface.withValues(alpha: 0.5),
+          icon: const Icon(Icons.translate),
+        ),
+        spacer,
+        IconButton(
+          onPressed: textDisplayController.switchLyricTextAlign,
+          tooltip: "切换歌词对齐方向",
+          color: onSurface,
+          icon: Icon(
+            switch (textDisplayController.lyricTextAlign) {
+              LyricTextAlign.left => Icons.format_align_left,
+              LyricTextAlign.center => Icons.format_align_center,
+              LyricTextAlign.right => Icons.format_align_right,
             },
-            color: onSurface,
-            icon: const Icon(Icons.lock),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              onPressed: textDisplayController.increaseLyricFontSize,
+        spacer,
+        IconButton(
+          onPressed: () => textDisplayController.increaseFontWeight(),
+          onLongPress: () =>
+              textDisplayController.increaseFontWeight(smallStep: true),
+          tooltip: "增加字体粗细 (${textDisplayController.lyricFontWeight})",
+          color: onSurface,
+          icon: Text(
+            "B+",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
               color: onSurface,
-              icon: const Icon(Icons.text_increase),
+              fontSize: 14,
             ),
-            spacer,
-            IconButton(
-              onPressed: textDisplayController.decreaseLyricFontSize,
-              color: onSurface,
-              icon: const Icon(Icons.text_decrease),
-            ),
-            spacer,
-            IconButton(
-              onPressed: textDisplayController.toggleLyricTranslation,
-              tooltip: textDisplayController.showLyricTranslation
-                  ? "歌词翻译：显示"
-                  : "歌词翻译：隐藏",
-              color: textDisplayController.showLyricTranslation
-                  ? onSurface
-                  : onSurface.withValues(alpha: 0.5),
-              icon: const Icon(Icons.translate),
-            ),
-            spacer,
-            IconButton(
-              onPressed: textDisplayController.switchLyricTextAlign,
-              tooltip: "切换歌词对齐方向",
-              color: onSurface,
-              icon: Icon(
-                switch (textDisplayController.lyricTextAlign) {
-                  LyricTextAlign.left => Icons.format_align_left,
-                  LyricTextAlign.center => Icons.format_align_center,
-                  LyricTextAlign.right => Icons.format_align_right,
-                },
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: () => textDisplayController.increaseFontWeight(),
-              onLongPress: () =>
-                  textDisplayController.increaseFontWeight(smallStep: true),
-              tooltip: "增加字体粗细 (${textDisplayController.lyricFontWeight})",
-              color: onSurface,
-              icon: Text(
-                "B+",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: onSurface,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: () => textDisplayController.decreaseFontWeight(),
-              onLongPress: () =>
-                  textDisplayController.decreaseFontWeight(smallStep: true),
-              tooltip: "减小字体粗细 (${textDisplayController.lyricFontWeight})",
-              color: onSurface,
-              icon: Text(
-                "B-",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: onSurface,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: textDisplayController.toggleNowPlayingInfo,
-              tooltip: textDisplayController.showNowPlayingInfo
-                  ? "关闭曲目信息"
-                  : "显示曲目信息",
-              color: onSurface,
-              icon: Icon(
-                textDisplayController.showNowPlayingInfo
-                    ? Icons.info_outline
-                    : Icons.info,
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: textDisplayController.toggleDoubleLineMode,
-              tooltip: textDisplayController.doubleLineMode ? "双行模式" : "单行模式",
-              color: onSurface,
-              icon: Icon(
-                textDisplayController.doubleLineMode
-                    ? Icons.view_agenda
-                    : Icons.view_headline,
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: () {
-                stdout.write(
-                  const ControlEventMessage(ControlEvent.previousAudio)
-                      .buildMessageJson(),
-                );
-              },
-              color: onSurface,
-              icon: const Icon(Icons.skip_previous),
-            ),
-            spacer,
-            ValueListenableBuilder(
-              valueListenable: DesktopLyricController.instance.isPlaying,
-              builder: (context, isPlaying, _) => IconButton(
-                onPressed: () {
-                  stdout.write(
-                    ControlEventMessage(
-                      isPlaying ? ControlEvent.pause : ControlEvent.start,
-                    ).buildMessageJson(),
-                  );
-                },
-                color: onSurface,
-                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-              ),
-            ),
-            spacer,
-            IconButton(
-              onPressed: () {
-                stdout.write(
-                  const ControlEventMessage(ControlEvent.nextAudio)
-                      .buildMessageJson(),
-                );
-              },
-              color: onSurface,
-              icon: const Icon(Icons.skip_next),
-            ),
-            spacer,
-            const _ShowColorSelectorBtn(),
-            spacer,
-            IconButton(
-              onPressed: () {
-                stdout.write(
-                  const ControlEventMessage(ControlEvent.close)
-                      .buildMessageJson(),
-                );
-              },
-              color: onSurface,
-              icon: const Icon(Icons.close),
-            ),
-          ],
+          ),
         ),
+        spacer,
+        IconButton(
+          onPressed: () => textDisplayController.decreaseFontWeight(),
+          onLongPress: () =>
+              textDisplayController.decreaseFontWeight(smallStep: true),
+          tooltip: "减小字体粗细 (${textDisplayController.lyricFontWeight})",
+          color: onSurface,
+          icon: Text(
+            "B-",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: onSurface,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    final center = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: () {
+            stdout.write(
+              const ControlEventMessage(ControlEvent.previousAudio)
+                  .buildMessageJson(),
+            );
+          },
+          color: onSurface,
+          icon: const Icon(Icons.skip_previous),
+        ),
+        spacer,
+        ValueListenableBuilder(
+          valueListenable: DesktopLyricController.instance.isPlaying,
+          builder: (context, isPlaying, _) => IconButton(
+            onPressed: () {
+              stdout.write(
+                ControlEventMessage(
+                  isPlaying ? ControlEvent.pause : ControlEvent.start,
+                ).buildMessageJson(),
+              );
+            },
+            color: onSurface,
+            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+          ),
+        ),
+        spacer,
+        IconButton(
+          onPressed: () {
+            stdout.write(
+              const ControlEventMessage(ControlEvent.nextAudio)
+                  .buildMessageJson(),
+            );
+          },
+          color: onSurface,
+          icon: const Icon(Icons.skip_next),
+        ),
+      ],
+    );
+
+    final right = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: textDisplayController.toggleNowPlayingInfo,
+          tooltip: textDisplayController.showNowPlayingInfo
+              ? "关闭曲目信息"
+              : "显示曲目信息",
+          color: onSurface,
+          icon: Icon(
+            textDisplayController.showNowPlayingInfo
+                ? Icons.info_outline
+                : Icons.info,
+          ),
+        ),
+        spacer,
+        const _ShowColorSelectorBtn(),
+        spacer,
+        IconButton(
+          onPressed: () {
+            stdout.write(
+              const ControlEventMessage(ControlEvent.close).buildMessageJson(),
+            );
+          },
+          color: onSurface,
+          icon: const Icon(Icons.close),
+        ),
+        spacer,
+        IconButton(
+          onPressed: lockWindow,
+          color: onSurface,
+          icon: const Icon(Icons.lock),
+        ),
+      ],
+    );
+
+    return Row(
+      children: [
+        Expanded(child: Align(alignment: Alignment.centerLeft, child: left)),
+        Expanded(child: Align(alignment: Alignment.center, child: center)),
+        Expanded(child: Align(alignment: Alignment.centerRight, child: right)),
       ],
     );
   }
@@ -247,9 +243,9 @@ class _ShowColorSelectorBtn extends StatelessWidget {
         SliderTheme(
           data: SliderThemeData(
             thumbColor: Color(theme.primary),
-            overlayColor: Color(theme.primary).withOpacity(0.08),
+            overlayColor: Color(theme.primary).withValues(alpha: 0.08),
             activeTrackColor: Color(theme.primary),
-            inactiveTrackColor: Color(theme.primary).withOpacity(0.15),
+            inactiveTrackColor: Color(theme.primary).withValues(alpha: 0.15),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
           ),
           child: ValueListenableBuilder(

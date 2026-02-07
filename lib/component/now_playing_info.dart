@@ -22,12 +22,22 @@ class NowPlayingInfo extends StatelessWidget {
           ),
         );
     final outlineColor = lyricOutlineColor(textColor);
+    final textAlign = switch (textDisplayController.lyricTextAlign) {
+      LyricTextAlign.left => TextAlign.left,
+      LyricTextAlign.center => TextAlign.center,
+      LyricTextAlign.right => TextAlign.right,
+    };
+    final crossAxisAlignment = switch (textDisplayController.lyricTextAlign) {
+      LyricTextAlign.left => CrossAxisAlignment.start,
+      LyricTextAlign.center => CrossAxisAlignment.center,
+      LyricTextAlign.right => CrossAxisAlignment.end,
+    };
 
     return ValueListenableBuilder(
       valueListenable: DesktopLyricController.instance.nowPlaying,
       builder: (context, nowPlaying, _) {
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: crossAxisAlignment,
           mainAxisSize: MainAxisSize.min,
           children: [
             outlinedText(
@@ -37,7 +47,7 @@ class NowPlayingInfo extends StatelessWidget {
               outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+              textAlign: textAlign,
               softWrap: false,
             ),
             outlinedText(
@@ -47,7 +57,7 @@ class NowPlayingInfo extends StatelessWidget {
               outlineWidth: lyricOutlineWidth(textStyle.fontSize ?? 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+              textAlign: textAlign,
               softWrap: false,
             ),
           ],

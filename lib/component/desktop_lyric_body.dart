@@ -25,7 +25,8 @@ class _DesktopLyricBodyState extends State<DesktopLyricBody> {
     return ValueListenableBuilder(
         valueListenable: BACKGROUND_OPACITY,
         builder: (context, opacity, _) {
-          final background = Color(theme.surfaceContainer).withOpacity(opacity);
+          final background =
+              Color(theme.surfaceContainer).withValues(alpha: opacity);
           return TweenAnimationBuilder(
             duration: const Duration(milliseconds: 300),
             tween: isHovering
